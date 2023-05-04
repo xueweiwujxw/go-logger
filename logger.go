@@ -1,3 +1,8 @@
+/*
+ * @author wlanxww (xueweiwujxw@outlook.com)
+ * @version 0.1.0
+ */
+
 package gologger
 
 import (
@@ -55,6 +60,15 @@ func (l *LogFile) output(level messageLevel, message string) {
 	}
 }
 
+/*
+Init File logger
+
+	@param debugMde bool enable debug log output
+	@param withFile bool enable log file generation
+
+The default filename is the current date, and subsequent logs will be appended to the file.
+Custom filename functionality may be added in the future.
+*/
 func InitFileLoger(debugMode bool, withFile bool) {
 	var err error
 	logger.debugMode = debugMode
@@ -75,10 +89,18 @@ func InitFileLoger(debugMode bool, withFile bool) {
 	logger.initialized = true
 }
 
+/*
+Get log file name if enabled
+
+	@returns string
+*/
 func GetFileName() string {
 	return logger.filename
 }
 
+/*
+Close log file
+*/
 func CloseLogFile() {
 	if !logger.initialized {
 		return
