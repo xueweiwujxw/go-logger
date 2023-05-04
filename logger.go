@@ -7,43 +7,89 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
 type LogFile struct {
-	loggerF   *log.Logger
-	logFile   *os.File
-	debugMode bool
-	withFile  bool
+	console     *log.Logger
+	file        *log.Logger
+	filename    string
+	logFile     *os.File
+	debugMode   bool
+	withFile    bool
+	lock        *sync.Mutex
+	initialized bool
 }
 
 var logger LogFile
+
+type messageLevel = int
+
+const (
+	infoLevel messageLevel = iota
+	warnLevel
+	errorLevel
+	fatalLevel
+	panicLevel
+	debugLevel
+)
+
+var prefix = []string{"[info]", "[warn]", "[error]", "[fatal]", "[panic]", "[debug]"}
+
+func (l *LogFile) output(level messageLevel, message string) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+
+	if !l.debugMode && level == debugLevel {
+		return
+	}
+
+	prefix := fmt.Sprintf("%s [%s] ", prefix[level], getCallerPosition())
+
+	formatted := prefix + message
+
+	l.console.Output(3, formatted)
+	if l.withFile {
+		l.file.Output(3, formatted)
+	}
+}
 
 func InitFileLoger(debugMode bool, withFile bool) {
 	var err error
 	logger.debugMode = debugMode
 	logger.withFile = withFile
+	logger.lock = &sync.Mutex{}
+	logger.console = log.New(os.Stderr, "", log.LstdFlags)
 	if logger.withFile {
 		file := "./" + time.Now().Format("2006-01-02") + ".log"
+		logger.filename = file
 		logger.logFile, err = os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			log.Fatal("logfile init failed")
 		}
-		logger.loggerF = log.New(logger.logFile, "", log.LstdFlags)
+		logger.file = log.New(logger.logFile, "", log.LstdFlags)
+	} else {
+		logger.filename = ""
 	}
+	logger.initialized = true
+}
+
+func GetFileName() string {
+	return logger.filename
 }
 
 func CloseLogFile() {
+	if !logger.initialized {
+		return
+	}
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	logger.logFile.Close()
 }
 
-type message struct {
-	prefix string
-	v      []any
-}
-
 func getCallerPosition() string {
-	pc, file, line, ok := runtime.Caller(2)
+	pc, file, line, ok := runtime.Caller(3)
 	if !ok {
 		return "???"
 	}
@@ -55,170 +101,89 @@ func getCallerPosition() string {
 	return fmt.Sprintf("%s:%d %s", file, line, funcName)
 }
 
-func Info(v ...any) {
-	log.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-	log.Print(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-		logger.loggerF.Print(v...)
-	}
+func Info(v ...interface{}) {
+	logger.output(infoLevel, fmt.Sprint(v...))
 }
 
-func Infof(format string, v ...any) {
-	log.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-	log.Printf(format, v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-		logger.loggerF.Printf(format, v...)
-	}
+func Infof(format string, v ...interface{}) {
+	logger.output(infoLevel, fmt.Sprintf(format, v...))
 }
 
-func Infoln(v ...any) {
-	log.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-	log.Println(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-		logger.loggerF.Println(v...)
-	}
+func Infoln(v ...interface{}) {
+	logger.output(infoLevel, fmt.Sprintln(v...))
 }
 
-func Warn(v ...any) {
-	log.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-	log.Print(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-		logger.loggerF.Print(v...)
-	}
+func Warn(v ...interface{}) {
+	logger.output(warnLevel, fmt.Sprint(v...))
 }
 
-func Warnf(format string, v ...any) {
-	log.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-	log.Printf(format, v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-		logger.loggerF.Printf(format, v...)
-	}
+func Warnf(format string, v ...interface{}) {
+	logger.output(warnLevel, fmt.Sprintf(format, v...))
 }
 
-func Warnln(v ...any) {
-	log.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-	log.Println(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-		logger.loggerF.Println(v...)
-	}
+func Warnln(v ...interface{}) {
+	logger.output(warnLevel, fmt.Sprintln(v...))
 }
 
-func Error(v ...any) {
-	log.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-	log.Print(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-		logger.loggerF.Print(v...)
-	}
+func Error(v ...interface{}) {
+	logger.output(errorLevel, fmt.Sprint(v...))
 }
 
-func Errorf(format string, v ...any) {
-	log.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-	log.Printf(format, v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-		logger.loggerF.Printf(format, v...)
-	}
+func Errorf(format string, v ...interface{}) {
+	logger.output(errorLevel, fmt.Sprintf(format, v...))
 }
 
-func Errorln(v ...any) {
-	log.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-	log.Println(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-		logger.loggerF.Println(v...)
-	}
+func Errorln(v ...interface{}) {
+	logger.output(errorLevel, fmt.Sprintln(v...))
 }
 
-func Fatal(v ...any) {
-	log.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-	log.Fatal(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-		logger.loggerF.Fatal(v...)
-	}
+func Fatal(v ...interface{}) {
+	logger.output(fatalLevel, fmt.Sprint(v...))
+	CloseLogFile()
+	os.Exit(1)
 }
 
-func Fatalf(format string, v ...any) {
-	log.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-	log.Fatalf(format, v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-		logger.loggerF.Fatalf(format, v...)
-	}
+func Fatalf(format string, v ...interface{}) {
+	logger.output(fatalLevel, fmt.Sprintf(format, v...))
+	CloseLogFile()
+	os.Exit(1)
 }
 
-func Fatalln(v ...any) {
-	log.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-	log.Fatalln(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-		logger.loggerF.Fatalln(v...)
-	}
+func Fatalln(v ...interface{}) {
+	logger.output(fatalLevel, fmt.Sprintln(v...))
+	CloseLogFile()
+	os.Exit(1)
 }
 
-func Panic(v ...any) {
-	log.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-	log.Panic(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-		logger.loggerF.Panic(v...)
-	}
+func Panic(v ...interface{}) {
+	s := fmt.Sprint(v...)
+	logger.output(panicLevel, s)
+	CloseLogFile()
+	panic(s)
 }
 
-func Panicf(format string, v ...any) {
-	log.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-	log.Panicf(format, v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-		logger.loggerF.Panicf(format, v...)
-	}
+func Panicf(format string, v ...interface{}) {
+	s := fmt.Sprintf(format, v...)
+	logger.output(panicLevel, s)
+	CloseLogFile()
+	panic(s)
 }
 
-func Panicln(v ...any) {
-	log.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-	log.Panicln(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-		logger.loggerF.Panicln(v...)
-	}
+func Panicln(v ...interface{}) {
+	s := fmt.Sprintln(v...)
+	logger.output(panicLevel, s)
+	CloseLogFile()
+	panic(s)
 }
 
-func Debug(v ...any) {
-	if logger.debugMode {
-		log.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-		log.Print(v...)
-		if logger.withFile {
-			logger.loggerF.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-			logger.loggerF.Print(v...)
-		}
-	}
+func Debug(v ...interface{}) {
+	logger.output(debugLevel, fmt.Sprint(v...))
 }
 
-func Debugf(format string, v ...any) {
-	if logger.debugMode {
-		log.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-		log.Printf(format, v...)
-		if logger.withFile {
-			logger.loggerF.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-			logger.loggerF.Printf(format, v...)
-		}
-	}
+func Debugf(format string, v ...interface{}) {
+	logger.output(debugLevel, fmt.Sprint(v...))
 }
 
-func Debugln(v ...any) {
-	if logger.debugMode {
-		log.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-		log.Println(v...)
-		if logger.withFile {
-			logger.loggerF.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-			logger.loggerF.Println(v...)
-		}
-	}
+func Debugln(v ...interface{}) {
+	logger.output(debugLevel, fmt.Sprint(v...))
 }
