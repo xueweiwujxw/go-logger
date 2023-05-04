@@ -29,11 +29,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Create github Release
-        uses: actions/upload-artifact@v3
-        with: 
-          path: ./
       - name: Release Module
         run: |
           TAG_NAME=${{ github.ref_name }}
-          go list ./...@$TAG_NAME
+          go list -m github.com/xueweiwujxw/go-logger@$TAG_NAME
