@@ -7,14 +7,17 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
 type LogFile struct {
-	loggerF   *log.Logger
-	logFile   *os.File
-	debugMode bool
-	withFile  bool
+	loggerF     *log.Logger
+	logFile     *os.File
+	debugMode   bool
+	withFile    bool
+	lock        *sync.Mutex
+	initialized bool
 }
 
 var logger LogFile
@@ -23,6 +26,7 @@ func InitFileLoger(debugMode bool, withFile bool) {
 	var err error
 	logger.debugMode = debugMode
 	logger.withFile = withFile
+	logger.lock = &sync.Mutex{}
 	if logger.withFile {
 		file := "./" + time.Now().Format("2006-01-02") + ".log"
 		logger.logFile, err = os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -31,15 +35,16 @@ func InitFileLoger(debugMode bool, withFile bool) {
 		}
 		logger.loggerF = log.New(logger.logFile, "", log.LstdFlags)
 	}
+	logger.initialized = true
 }
 
 func CloseLogFile() {
+	if !logger.initialized {
+		return
+	}
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	logger.logFile.Close()
-}
-
-type message struct {
-	prefix string
-	v      []any
 }
 
 func getCallerPosition() string {
@@ -55,7 +60,9 @@ func getCallerPosition() string {
 	return fmt.Sprintf("%s:%d %s", file, line, funcName)
 }
 
-func Info(v ...any) {
+func Info(v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
 	log.Print(v...)
 	if logger.withFile {
@@ -64,7 +71,9 @@ func Info(v ...any) {
 	}
 }
 
-func Infof(format string, v ...any) {
+func Infof(format string, v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
 	log.Printf(format, v...)
 	if logger.withFile {
@@ -73,7 +82,9 @@ func Infof(format string, v ...any) {
 	}
 }
 
-func Infoln(v ...any) {
+func Infoln(v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
 	log.Println(v...)
 	if logger.withFile {
@@ -82,7 +93,9 @@ func Infoln(v ...any) {
 	}
 }
 
-func Warn(v ...any) {
+func Warn(v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
 	log.Print(v...)
 	if logger.withFile {
@@ -91,7 +104,9 @@ func Warn(v ...any) {
 	}
 }
 
-func Warnf(format string, v ...any) {
+func Warnf(format string, v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
 	log.Printf(format, v...)
 	if logger.withFile {
@@ -100,7 +115,9 @@ func Warnf(format string, v ...any) {
 	}
 }
 
-func Warnln(v ...any) {
+func Warnln(v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
 	log.Println(v...)
 	if logger.withFile {
@@ -109,7 +126,9 @@ func Warnln(v ...any) {
 	}
 }
 
-func Error(v ...any) {
+func Error(v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
 	log.Print(v...)
 	if logger.withFile {
@@ -118,7 +137,9 @@ func Error(v ...any) {
 	}
 }
 
-func Errorf(format string, v ...any) {
+func Errorf(format string, v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
 	log.Printf(format, v...)
 	if logger.withFile {
@@ -127,7 +148,9 @@ func Errorf(format string, v ...any) {
 	}
 }
 
-func Errorln(v ...any) {
+func Errorln(v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
 	log.Println(v...)
 	if logger.withFile {
@@ -136,7 +159,9 @@ func Errorln(v ...any) {
 	}
 }
 
-func Fatal(v ...any) {
+func Fatal(v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
 	log.Fatal(v...)
 	if logger.withFile {
@@ -145,7 +170,9 @@ func Fatal(v ...any) {
 	}
 }
 
-func Fatalf(format string, v ...any) {
+func Fatalf(format string, v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
 	log.Fatalf(format, v...)
 	if logger.withFile {
@@ -154,7 +181,9 @@ func Fatalf(format string, v ...any) {
 	}
 }
 
-func Fatalln(v ...any) {
+func Fatalln(v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
 	log.Fatalln(v...)
 	if logger.withFile {
@@ -163,7 +192,9 @@ func Fatalln(v ...any) {
 	}
 }
 
-func Panic(v ...any) {
+func Panic(v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
 	log.Panic(v...)
 	if logger.withFile {
@@ -172,7 +203,9 @@ func Panic(v ...any) {
 	}
 }
 
-func Panicf(format string, v ...any) {
+func Panicf(format string, v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
 	log.Panicf(format, v...)
 	if logger.withFile {
@@ -181,7 +214,9 @@ func Panicf(format string, v ...any) {
 	}
 }
 
-func Panicln(v ...any) {
+func Panicln(v ...interface{}) {
+	logger.lock.Lock()
+	defer logger.lock.Unlock()
 	log.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
 	log.Panicln(v...)
 	if logger.withFile {
@@ -190,8 +225,10 @@ func Panicln(v ...any) {
 	}
 }
 
-func Debug(v ...any) {
+func Debug(v ...interface{}) {
 	if logger.debugMode {
+		logger.lock.Lock()
+		defer logger.lock.Unlock()
 		log.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
 		log.Print(v...)
 		if logger.withFile {
@@ -201,8 +238,10 @@ func Debug(v ...any) {
 	}
 }
 
-func Debugf(format string, v ...any) {
+func Debugf(format string, v ...interface{}) {
 	if logger.debugMode {
+		logger.lock.Lock()
+		defer logger.lock.Unlock()
 		log.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
 		log.Printf(format, v...)
 		if logger.withFile {
@@ -212,8 +251,10 @@ func Debugf(format string, v ...any) {
 	}
 }
 
-func Debugln(v ...any) {
+func Debugln(v ...interface{}) {
 	if logger.debugMode {
+		logger.lock.Lock()
+		defer logger.lock.Unlock()
 		log.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
 		log.Println(v...)
 		if logger.withFile {
