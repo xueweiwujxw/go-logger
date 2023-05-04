@@ -12,7 +12,9 @@ import (
 )
 
 type LogFile struct {
-	loggerF     *log.Logger
+	console     *log.Logger
+	file        *log.Logger
+	filename    string
 	logFile     *os.File
 	debugMode   bool
 	withFile    bool
@@ -33,7 +35,7 @@ const (
 	debugLevel
 )
 
-var prefix = []string{"[info]", "[warn]", "[error]", "[fatal]", "[panic]"}
+var prefix = []string{"[info]", "[warn]", "[error]", "[fatal]", "[panic]", "[debug]"}
 
 func (l *LogFile) output(level messageLevel, message string) {
 	l.lock.Lock()
@@ -47,9 +49,9 @@ func (l *LogFile) output(level messageLevel, message string) {
 
 	formatted := prefix + message
 
-	log.Output(3, formatted)
+	l.console.Output(3, formatted)
 	if l.withFile {
-		l.loggerF.Output(3, formatted)
+		l.file.Output(3, formatted)
 	}
 }
 
@@ -58,15 +60,23 @@ func InitFileLoger(debugMode bool, withFile bool) {
 	logger.debugMode = debugMode
 	logger.withFile = withFile
 	logger.lock = &sync.Mutex{}
+	logger.console = log.New(os.Stderr, "", log.LstdFlags)
 	if logger.withFile {
 		file := "./" + time.Now().Format("2006-01-02") + ".log"
+		logger.filename = file
 		logger.logFile, err = os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			log.Fatal("logfile init failed")
 		}
-		logger.loggerF = log.New(logger.logFile, "", log.LstdFlags)
+		logger.file = log.New(logger.logFile, "", log.LstdFlags)
+	} else {
+		logger.filename = ""
 	}
 	logger.initialized = true
+}
+
+func GetFileName() string {
+	return logger.filename
 }
 
 func CloseLogFile() {
