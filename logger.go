@@ -22,6 +22,37 @@ type LogFile struct {
 
 var logger LogFile
 
+type messageLevel = int
+
+const (
+	infoLevel messageLevel = iota
+	warnLevel
+	errorLevel
+	fatalLevel
+	panicLevel
+	debugLevel
+)
+
+var prefix = []string{"[info]", "[warn]", "[error]", "[fatal]", "[panic]"}
+
+func (l *LogFile) output(level messageLevel, message string) {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+
+	if !l.debugMode && level == debugLevel {
+		return
+	}
+
+	prefix := fmt.Sprintf("%s [%s] ", prefix[level], getCallerPosition())
+
+	formatted := prefix + message
+
+	log.Output(3, formatted)
+	if l.withFile {
+		l.loggerF.Output(3, formatted)
+	}
+}
+
 func InitFileLoger(debugMode bool, withFile bool) {
 	var err error
 	logger.debugMode = debugMode
@@ -48,7 +79,7 @@ func CloseLogFile() {
 }
 
 func getCallerPosition() string {
-	pc, file, line, ok := runtime.Caller(2)
+	pc, file, line, ok := runtime.Caller(3)
 	if !ok {
 		return "???"
 	}
@@ -61,205 +92,88 @@ func getCallerPosition() string {
 }
 
 func Info(v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-	log.Print(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-		logger.loggerF.Print(v...)
-	}
+	logger.output(infoLevel, fmt.Sprint(v...))
 }
 
 func Infof(format string, v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-	log.Printf(format, v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-		logger.loggerF.Printf(format, v...)
-	}
+	logger.output(infoLevel, fmt.Sprintf(format, v...))
 }
 
 func Infoln(v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-	log.Println(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[info] [%s] ", getCallerPosition()))
-		logger.loggerF.Println(v...)
-	}
+	logger.output(infoLevel, fmt.Sprintln(v...))
 }
 
 func Warn(v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-	log.Print(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-		logger.loggerF.Print(v...)
-	}
+	logger.output(warnLevel, fmt.Sprint(v...))
 }
 
 func Warnf(format string, v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-	log.Printf(format, v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-		logger.loggerF.Printf(format, v...)
-	}
+	logger.output(warnLevel, fmt.Sprintf(format, v...))
 }
 
 func Warnln(v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-	log.Println(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[warn] [%s] ", getCallerPosition()))
-		logger.loggerF.Println(v...)
-	}
+	logger.output(warnLevel, fmt.Sprintln(v...))
 }
 
 func Error(v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-	log.Print(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-		logger.loggerF.Print(v...)
-	}
+	logger.output(errorLevel, fmt.Sprint(v...))
 }
 
 func Errorf(format string, v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-	log.Printf(format, v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-		logger.loggerF.Printf(format, v...)
-	}
+	logger.output(errorLevel, fmt.Sprintf(format, v...))
 }
 
 func Errorln(v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-	log.Println(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[error] [%s] ", getCallerPosition()))
-		logger.loggerF.Println(v...)
-	}
+	logger.output(errorLevel, fmt.Sprintln(v...))
 }
 
 func Fatal(v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-	log.Fatal(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-		logger.loggerF.Fatal(v...)
-	}
+	logger.output(fatalLevel, fmt.Sprint(v...))
+	CloseLogFile()
+	os.Exit(1)
 }
 
 func Fatalf(format string, v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-	log.Fatalf(format, v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-		logger.loggerF.Fatalf(format, v...)
-	}
+	logger.output(fatalLevel, fmt.Sprintf(format, v...))
+	CloseLogFile()
+	os.Exit(1)
 }
 
 func Fatalln(v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-	log.Fatalln(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[fatal] [%s] ", getCallerPosition()))
-		logger.loggerF.Fatalln(v...)
-	}
+	logger.output(fatalLevel, fmt.Sprintln(v...))
+	CloseLogFile()
+	os.Exit(1)
 }
 
 func Panic(v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-	log.Panic(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-		logger.loggerF.Panic(v...)
-	}
+	s := fmt.Sprint(v...)
+	logger.output(panicLevel, s)
+	CloseLogFile()
+	panic(s)
 }
 
 func Panicf(format string, v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-	log.Panicf(format, v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-		logger.loggerF.Panicf(format, v...)
-	}
+	s := fmt.Sprintf(format, v...)
+	logger.output(panicLevel, s)
+	CloseLogFile()
+	panic(s)
 }
 
 func Panicln(v ...interface{}) {
-	logger.lock.Lock()
-	defer logger.lock.Unlock()
-	log.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-	log.Panicln(v...)
-	if logger.withFile {
-		logger.loggerF.SetPrefix(fmt.Sprintf("[panic] [%s] ", getCallerPosition()))
-		logger.loggerF.Panicln(v...)
-	}
+	s := fmt.Sprintln(v...)
+	logger.output(panicLevel, s)
+	CloseLogFile()
+	panic(s)
 }
 
 func Debug(v ...interface{}) {
-	if logger.debugMode {
-		logger.lock.Lock()
-		defer logger.lock.Unlock()
-		log.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-		log.Print(v...)
-		if logger.withFile {
-			logger.loggerF.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-			logger.loggerF.Print(v...)
-		}
-	}
+	logger.output(debugLevel, fmt.Sprint(v...))
 }
 
 func Debugf(format string, v ...interface{}) {
-	if logger.debugMode {
-		logger.lock.Lock()
-		defer logger.lock.Unlock()
-		log.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-		log.Printf(format, v...)
-		if logger.withFile {
-			logger.loggerF.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-			logger.loggerF.Printf(format, v...)
-		}
-	}
+	logger.output(debugLevel, fmt.Sprint(v...))
 }
 
 func Debugln(v ...interface{}) {
-	if logger.debugMode {
-		logger.lock.Lock()
-		defer logger.lock.Unlock()
-		log.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-		log.Println(v...)
-		if logger.withFile {
-			logger.loggerF.SetPrefix(fmt.Sprintf("[debug] [%s] ", getCallerPosition()))
-			logger.loggerF.Println(v...)
-		}
-	}
+	logger.output(debugLevel, fmt.Sprint(v...))
 }
