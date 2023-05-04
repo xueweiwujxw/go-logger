@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  test:
+  release:
     strategy:
       matrix:
         version: [ '1.15', '1.16', '1.17', '1.18', '1.19', '1.20' ]
