@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  release:
+  release-test:
     strategy:
       matrix:
         version: [ '1.15', '1.16', '1.17', '1.18', '1.19', '1.20' ]
@@ -22,11 +22,18 @@ jobs:
           check-latest: true
       - name: Test
         run: go test -v
-      - name: Release
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: release --rm-dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+
+  release:
+    needs: release-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Create github Release
+        uses: actions/upload-artifact@v3
+        with: 
+          path: ./
+      - name: Release Module
+        run: |
+          TAG_NAME=${{ github.ref_name }}
+          go list ./...@$TAG_NAME
