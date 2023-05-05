@@ -203,9 +203,9 @@ func Debug(v ...interface{}) {
 }
 
 func Debugf(format string, v ...interface{}) {
-	logger.output(debugLevel, fmt.Sprint(v...))
+	logger.output(debugLevel, fmt.Sprintf(format, v...))
 }
 
 func Debugln(v ...interface{}) {
-	logger.output(debugLevel, fmt.Sprint(v...))
+	logger.output(debugLevel, fmt.Sprintln(v...))
 }
