@@ -8,6 +8,12 @@ Go logger is a logging library that supports writing log files. It is a wrapper 
 
 ** *
 
+### Installation
+
+```shell
+go get github.com/xueweiwujxw/go-logger
+```
+
 ### Usage
 
 ```go
@@ -40,43 +46,19 @@ func main() {
 }
 ```
 ```shell
-2023/05/04 16:29:13 [info] [usage.go:10 main.main] Info test
-2023/05/04 16:29:13 [info] [usage.go:11 main.main] Infof test
-2023/05/04 16:29:13 [info] [usage.go:12 main.main] Infoln test
-2023/05/04 16:29:13 [warn] [usage.go:14 main.main] Warn test
-2023/05/04 16:29:13 [warn] [usage.go:15 main.main] Warnf test
-2023/05/04 16:29:13 [warn] [usage.go:16 main.main] Warnln test
-2023/05/04 16:29:13 [error] [usage.go:18 main.main] Error test
-2023/05/04 16:29:13 [error] [usage.go:19 main.main] Errorf test
-2023/05/04 16:29:13 [error] [usage.go:20 main.main] Errorln test
+2023/05/09 17:27:25 [info] [usage.go:10 main.main] Info test
+2023/05/09 17:27:25 [info] [usage.go:11 main.main] Infof test
+2023/05/09 17:27:25 [info] [usage.go:12 main.main] Infoln test
+2023/05/09 17:27:25 [warn] [usage.go:14 main.main] Warn test
+2023/05/09 17:27:25 [warn] [usage.go:15 main.main] Warnf test
+2023/05/09 17:27:25 [warn] [usage.go:16 main.main] Warnln test
+2023/05/09 17:27:25 [error] [usage.go:18 main.main] Error test
+2023/05/09 17:27:25 [error] [usage.go:19 main.main] Errorf test
+2023/05/09 17:27:25 [error] [usage.go:20 main.main] Errorln test
+2023/05/09 17:27:25 [debug] [usage.go:22 main.main] Debug test
+2023/05/09 17:27:25 [debug] [usage.go:23 main.main] Debugf test
+2023/05/09 17:27:25 [debug] [usage.go:24 main.main] Debugln test
 ```
-
-### Supported Functions
-
-| func          |
-| ------------- |
-| InitFileLoger |
-| GetFileName   |
-| CloseLogFile  |
-| Info          |
-| Infof         |
-| Infoln        |
-| Warn          |
-| Warnf         |
-| Warnln        |
-| Error         |
-| Errorf        |
-| Errorln       |
-| Debug         |
-| Debugf        |
-| Debugln       |
-| Fatal         |
-| Fatalf        |
-| Fatalln       |
-| Panic         |
-| Panicf        |
-| Panicln       |
-
 
 ### Contributors
 
