@@ -1,5 +1,6 @@
 ![Test](https://github.com/xueweiwujxw/go-logger/actions/workflows/test.yml/badge.svg)
 ![release](https://github.com/xueweiwujxw/go-logger/actions/workflows/release.yml/badge.svg)
+[![codecov](https://codecov.io/gh/xueweiwujxw/go-logger/branch/master/graph/badge.svg?token=5WBX2UZQ79)](https://codecov.io/gh/xueweiwujxw/go-logger)
 [![Go Reference](https://pkg.go.dev/badge/github.com/xueweiwujxw/go-logger.svg)](https://pkg.go.dev/github.com/xueweiwujxw/go-logger)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/xueweiwujxw/go-logger)
 
