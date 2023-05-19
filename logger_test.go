@@ -325,3 +325,329 @@ func TestGologgerWithCustomFile(t *testing.T) {
 	}
 
 }
+
+func TestFatal(t *testing.T) {
+	testlog := "testFatal.log"
+	expected := "Fatal test"
+
+	oldOsExit := gologger.OsExit
+	var gotExitCode int
+	TestExit := func(code int) {
+		gotExitCode = code
+	}
+	gologger.SwitchExit(TestExit)
+
+	oldStderr := os.Stderr
+	_, stderrW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stderr = stderrW
+
+	// test being
+	gologger.InitFileLoger(false, true, testlog)
+	gologger.Fatal("Fatal test\n")
+	// test end
+
+	gologger.SwitchExit(oldOsExit)
+
+	stderrW.Close()
+	os.Stderr = oldStderr
+
+	if exp := 1; gotExitCode != exp {
+		t.Errorf("expected exit code: %d, got: %d", exp, gotExitCode)
+	}
+
+	file, err := os.OpenFile(testlog, os.O_RDONLY, 0666)
+	if err != nil {
+		t.Fatalf("log file open failed, %q", err)
+	}
+
+	var b []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		b = append(b, scanner.Text())
+	}
+	file.Close()
+	os.Remove(testlog)
+
+	if len(b) != 1 {
+		t.Fatalf("invalid not output len, got %d, expected 1", len(b))
+	}
+	if !strings.Contains(b[0], expected) {
+		t.Errorf("log error, got %q, does not cotain expected %q", b[0], expected)
+	}
+}
+
+func TestFatalf(t *testing.T) {
+	testlog := "testFatalf.log"
+	expected := "Fatalf test"
+
+	oldOsExit := gologger.OsExit
+	var gotExitCode int
+	TestExit := func(code int) {
+		gotExitCode = code
+	}
+	gologger.SwitchExit(TestExit)
+
+	oldStderr := os.Stderr
+	_, stderrW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stderr = stderrW
+
+	// test being
+	gologger.InitFileLoger(false, true, testlog)
+	gologger.Fatalf("%s\n", "Fatalf test")
+	// test end
+
+	gologger.SwitchExit(oldOsExit)
+
+	stderrW.Close()
+	os.Stderr = oldStderr
+
+	if exp := 1; gotExitCode != exp {
+		t.Errorf("expected exit code: %d, got: %d", exp, gotExitCode)
+	}
+
+	file, err := os.OpenFile(testlog, os.O_RDONLY, 0666)
+	if err != nil {
+		t.Fatalf("log file open failed, %q", err)
+	}
+
+	var b []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		b = append(b, scanner.Text())
+	}
+	file.Close()
+	os.Remove(testlog)
+
+	if len(b) != 1 {
+		t.Fatalf("invalid not output len, got %d, expected 1", len(b))
+	}
+	if !strings.Contains(b[0], expected) {
+		t.Errorf("log error, got %q, does not cotain expected %q", b[0], expected)
+	}
+}
+
+func TestFatalln(t *testing.T) {
+	testlog := "testFatalln.log"
+	expected := "Fatalln test"
+
+	oldOsExit := gologger.OsExit
+	var gotExitCode int
+	TestExit := func(code int) {
+		gotExitCode = code
+	}
+	gologger.SwitchExit(TestExit)
+
+	oldStderr := os.Stderr
+	_, stderrW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stderr = stderrW
+
+	// test being
+	gologger.InitFileLoger(false, true, testlog)
+	gologger.Fatalln("Fatalln test")
+	// test end
+
+	gologger.SwitchExit(oldOsExit)
+
+	stderrW.Close()
+	os.Stderr = oldStderr
+
+	if exp := 1; gotExitCode != exp {
+		t.Errorf("expected exit code: %d, got: %d", exp, gotExitCode)
+	}
+
+	file, err := os.OpenFile(testlog, os.O_RDONLY, 0666)
+	if err != nil {
+		t.Fatalf("log file open failed, %q", err)
+	}
+
+	var b []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		b = append(b, scanner.Text())
+	}
+	file.Close()
+	os.Remove(testlog)
+
+	if len(b) != 1 {
+		t.Fatalf("invalid not output len, got %d, expected 1", len(b))
+	}
+	if !strings.Contains(b[0], expected) {
+		t.Errorf("log error, got %q, does not cotain expected %q", b[0], expected)
+	}
+}
+
+func TestPanic(t *testing.T) {
+	testlog := "testPanic.log"
+	expected := "Panic test"
+
+	oldStderr := os.Stderr
+	_, stderrW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stderr = stderrW
+
+	defer func() {
+		if r := recover(); r != nil {
+
+			panicStr, ok := r.(string)
+			if !ok {
+				t.Errorf("Expected panic with error type, got %T", r)
+			} else {
+				if !strings.Contains(panicStr, expected) {
+					t.Errorf("Expected panic message '%s', got '%s'", expected, panicStr)
+				}
+
+				stderrW.Close()
+				os.Stderr = oldStderr
+
+				file, err := os.OpenFile(testlog, os.O_RDONLY, 0666)
+				if err != nil {
+					t.Fatalf("log file open failed, %q", err)
+				}
+
+				var b []string
+				scanner := bufio.NewScanner(file)
+				for scanner.Scan() {
+					b = append(b, scanner.Text())
+				}
+				file.Close()
+				os.Remove(testlog)
+
+				if len(b) != 1 {
+					t.Fatalf("invalid not output len, got %d, expected 1", len(b))
+				}
+				if !strings.Contains(b[0], expected) {
+					t.Errorf("log error, got %q, does not cotain expected %q", b[0], expected)
+				}
+			}
+		} else {
+			t.Error("Expected panic, but no panic occurred")
+		}
+	}()
+
+	// Test code begin
+	gologger.InitFileLoger(false, true, testlog)
+	gologger.Panic("Panic test\n")
+	// Test code end
+}
+
+func TestPanicf(t *testing.T) {
+	testlog := "testPanicf.log"
+	expected := "Panicf test"
+
+	oldStderr := os.Stderr
+	_, stderrW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stderr = stderrW
+
+	defer func() {
+		if r := recover(); r != nil {
+
+			panicStr, ok := r.(string)
+			if !ok {
+				t.Errorf("Expected panic with error type, got %T", r)
+			} else {
+				if !strings.Contains(panicStr, expected) {
+					t.Errorf("Expected panic message '%s', got '%s'", expected, panicStr)
+				}
+
+				stderrW.Close()
+				os.Stderr = oldStderr
+
+				file, err := os.OpenFile(testlog, os.O_RDONLY, 0666)
+				if err != nil {
+					t.Fatalf("log file open failed, %q", err)
+				}
+
+				var b []string
+				scanner := bufio.NewScanner(file)
+				for scanner.Scan() {
+					b = append(b, scanner.Text())
+				}
+				file.Close()
+				os.Remove(testlog)
+
+				if len(b) != 1 {
+					t.Fatalf("invalid not output len, got %d, expected 1", len(b))
+				}
+				if !strings.Contains(b[0], expected) {
+					t.Errorf("log error, got %q, does not cotain expected %q", b[0], expected)
+				}
+			}
+		} else {
+			t.Error("Expected panic, but no panic occurred")
+		}
+	}()
+
+	// Test code begin
+	gologger.InitFileLoger(false, true, testlog)
+	gologger.Panicf("%s\n", "Panicf test")
+	// Test code end
+}
+func TestPanicln(t *testing.T) {
+	testlog := "testPanicln.log"
+	expected := "Panicln test"
+
+	oldStderr := os.Stderr
+	_, stderrW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stderr = stderrW
+
+	defer func() {
+		if r := recover(); r != nil {
+
+			panicStr, ok := r.(string)
+			if !ok {
+				t.Errorf("Expected panic with error type, got %T", r)
+			} else {
+				if !strings.Contains(panicStr, expected) {
+					t.Errorf("Expected panic message '%s', got '%s'", expected, panicStr)
+				}
+
+				stderrW.Close()
+				os.Stderr = oldStderr
+
+				file, err := os.OpenFile(testlog, os.O_RDONLY, 0666)
+				if err != nil {
+					t.Fatalf("log file open failed, %q", err)
+				}
+
+				var b []string
+				scanner := bufio.NewScanner(file)
+				for scanner.Scan() {
+					b = append(b, scanner.Text())
+				}
+				file.Close()
+				os.Remove(testlog)
+
+				if len(b) != 1 {
+					t.Fatalf("invalid not output len, got %d, expected 1", len(b))
+				}
+				if !strings.Contains(b[0], expected) {
+					t.Errorf("log error, got %q, does not cotain expected %q", b[0], expected)
+				}
+			}
+		} else {
+			t.Error("Expected panic, but no panic occurred")
+		}
+	}()
+
+	// Test code begin
+	gologger.InitFileLoger(false, true, testlog)
+	gologger.Panicln("Panicln test")
+	// Test code end
+}

@@ -26,6 +26,7 @@ type LogFile struct {
 }
 
 var logger LogFile
+var OsExit = os.Exit
 
 type messageLevel = int
 
@@ -59,6 +60,17 @@ func (l *LogFile) output(level messageLevel, message string) {
 	if l.withFile {
 		l.file.Output(3, formatted)
 	}
+}
+
+// SwitchExit is used to switch the program exit function.
+// The `exit` parameter is a function that accepts an integer argument and replaces the standard os.Exit function.
+//
+// Note: This function is intended to be used only in a testing environment and should not be used in non-testing environments.
+// In a testing environment, SwitchExit can be used to replace the program exit function with a custom function to capture the exit behavior during tests.
+// Make sure that the custom exit function follows the behavior conventions of os.Exit, where the status code should be within the range [0, 125].
+// It is not recommended to use this function to replace the os.Exit function in non-testing environments to avoid unnecessary side effects and erroneous behavior.
+func SwitchExit(exit func(int)) {
+	OsExit = exit
 }
 
 // Init File logger
@@ -163,19 +175,19 @@ func Errorln(v ...interface{}) {
 func Fatal(v ...interface{}) {
 	logger.output(fatalLevel, fmt.Sprint(v...))
 	CloseLogFile()
-	os.Exit(1)
+	OsExit(1)
 }
 
 func Fatalf(format string, v ...interface{}) {
 	logger.output(fatalLevel, fmt.Sprintf(format, v...))
 	CloseLogFile()
-	os.Exit(1)
+	OsExit(1)
 }
 
 func Fatalln(v ...interface{}) {
 	logger.output(fatalLevel, fmt.Sprintln(v...))
 	CloseLogFile()
-	os.Exit(1)
+	OsExit(1)
 }
 
 func Panic(v ...interface{}) {

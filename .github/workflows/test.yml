@@ -23,3 +23,19 @@ jobs:
           check-latest: true
       - name: Test
         run: go test -v
+  test-coverage:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install Golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: '1.18'
+      - name: Test with coverage
+        run: go test -v -race -coverprofile=coverage.txt -covermode=atomic
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with: 
+          token: ${{ secrets.CODECOV_TOKEN }}
