@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	gologger.InitFileLoger(true, true)
+	gologger.InitFileLoger(true, true, "")
 
 	gologger.Info("Info test\n")
 	gologger.Infof("%s\n", "Infof test")

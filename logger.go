@@ -1,5 +1,5 @@
 // @author wlanxww (xueweiwujxw@outlook.com)
-// @version 0.1.3
+// @version 0.1.4
 
 package gologger
 
@@ -41,6 +41,9 @@ const (
 var prefix = []string{"[info]", "[warn]", "[error]", "[fatal]", "[panic]", "[debug]"}
 
 func (l *LogFile) output(level messageLevel, message string) {
+	if !l.initialized {
+		return
+	}
 	l.lock.Lock()
 	defer l.lock.Unlock()
 
@@ -62,17 +65,23 @@ func (l *LogFile) output(level messageLevel, message string) {
 //
 //	@param debugMde bool enable debug log output
 //	@param withFile bool enable log file generation
+//	@param logFileName string custom log file, disabled when value is "" - empty string
 //
 // The default filename is the current date, and subsequent logs will be appended to the file.
 // Custom filename functionality may be added in the future.
-func InitFileLoger(debugMode bool, withFile bool) {
+func InitFileLoger(debugMode bool, withFile bool, logFileName string) {
 	var err error
 	logger.debugMode = debugMode
 	logger.withFile = withFile
 	logger.lock = &sync.Mutex{}
 	logger.console = log.New(os.Stderr, "", log.LstdFlags)
 	if logger.withFile {
-		file := "./" + time.Now().Format("2006-01-02") + ".log"
+		var file string
+		if logFileName == "" {
+			file = "./" + time.Now().Format("2006-01-02") + ".log"
+		} else {
+			file = logFileName
+		}
 		logger.filename = file
 		logger.logFile, err = os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
