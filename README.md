@@ -1,15 +1,31 @@
-![Test](https://github.com/xueweiwujxw/go-logger/actions/workflows/test.yml/badge.svg)
-![release](https://github.com/xueweiwujxw/go-logger/actions/workflows/release.yml/badge.svg)
-[![codecov](https://codecov.io/gh/xueweiwujxw/go-logger/branch/master/graph/badge.svg?token=5WBX2UZQ79)](https://codecov.io/gh/xueweiwujxw/go-logger)
-[![Go Reference](https://pkg.go.dev/badge/github.com/xueweiwujxw/go-logger.svg)](https://pkg.go.dev/github.com/xueweiwujxw/go-logger)
-![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/xueweiwujxw/go-logger)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/bf2e5a8ab0c544f5a65e122220df0f06)](https://app.codacy.com/gh/xueweiwujxw/go-logger/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
-
-## Go logger
-
-Go logger is a logging library that supports writing log files. It is a wrapper around the standard Go log package and provides support for the following log levels: info, warn, error, debug, fatal, and panic.
-
----
+<h2 align="center">
+  Go logger
+</h2>
+<p align="center">
+  Go logger is a logging library that supports writing log files. 
+</p>
+<p align="center">
+  It is a wrapper around the standard Go log package and provides support for the following log levels: info, warn, error, debug, fatal, and panic.
+</p>
+<p align="center">
+  <img src="https://github.com/xueweiwujxw/go-logger/actions/workflows/test.yml/badge.svg" alt="Test">
+  <img src="https://github.com/xueweiwujxw/go-logger/actions/workflows/release.yml/badge.svg" alt="Release">
+  <br/>
+  <a href="https://codecov.io/gh/xueweiwujxw/go-logger">
+    <img src="https://codecov.io/gh/xueweiwujxw/go-logger/branch/master/graph/badge.svg?token=5WBX2UZQ79" alt="Codecov">
+  </a>
+  <a href="https://pkg.go.dev/github.com/xueweiwujxw/go-logger">
+    <img src="https://pkg.go.dev/badge/github.com/xueweiwujxw/go-logger.svg" alt="Go Reference">
+  </a>
+  <a href="https://github.com/xueweiwujxw/go-logger/releases">
+    <img src="https://img.shields.io/github/v/tag/xueweiwujxw/go-logger" alt="GitHub tag">
+  </a>
+  <img src="https://img.shields.io/github/repo-size/xueweiwujxw/multi-provider" alt="repo size">
+  <a href="https://app.codacy.com/gh/xueweiwujxw/go-logger/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade">
+    <img src="https://app.codacy.com/project/badge/Grade/bf2e5a8ab0c544f5a65e122220df0f06" alt="Codacy Badge">
+  </a>
+</p>
+<hr/>
 
 ### Installation
 
