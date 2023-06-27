@@ -3,6 +3,7 @@
 [![codecov](https://codecov.io/gh/xueweiwujxw/go-logger/branch/master/graph/badge.svg?token=5WBX2UZQ79)](https://codecov.io/gh/xueweiwujxw/go-logger)
 [![Go Reference](https://pkg.go.dev/badge/github.com/xueweiwujxw/go-logger.svg)](https://pkg.go.dev/github.com/xueweiwujxw/go-logger)
 ![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/xueweiwujxw/go-logger)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/bf2e5a8ab0c544f5a65e122220df0f06)](https://app.codacy.com/gh/xueweiwujxw/go-logger/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 ## Go logger
 
